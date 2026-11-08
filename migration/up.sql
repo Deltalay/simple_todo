@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR NOT NULL,
     password VARCHAR NOT NULL
 );
-
+-- Very terrible way to do microservice with this. 
 CREATE TABLE IF NOT EXISTS todos (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     title VARCHAR NOT NULL,
