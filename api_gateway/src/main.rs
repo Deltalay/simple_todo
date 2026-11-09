@@ -31,7 +31,7 @@ async fn create_todo(body: web::Json<CreateTodoRequest>) -> Result<HttpResponse,
 
     let grpc_request = todo::CreateTodoRequest {
         title: request.title,
-        description: request.description.unwrap(),
+        description: request.description.unwrap_or_default(),
         is_done: request.is_done,
         id: None,
     };
@@ -39,12 +39,14 @@ async fn create_todo(body: web::Json<CreateTodoRequest>) -> Result<HttpResponse,
         .await
         .map_err(actix_web::error::ErrorInternalServerError)?;
     let request = tonic::Request::new(grpc_request);
+    // TODO: Remove unwrap
     let response = client
         .create_todo(request)
         .await
         .map_err(actix_web::error::ErrorInternalServerError)
         .unwrap()
         .into_inner();
+    // TODO: Remove unwrap
     let todo = response.todo.unwrap();
 
     let serial_res = CreateTodoResponse {
