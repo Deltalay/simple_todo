@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+package auth.v1;
+
+option go_package = "auth_service/proto;authpb";
+message LoginRequest {
+  string email = 1;
+  string password = 2;
+}
+message LoginResponse {
+  string email = 1;
+  string username = 2;
+  string session_id = 3;
+  string user_id = 4;
+}
+
+message RegisterRequest {
+  string username = 1;
+  string email = 2;
+  string password = 3;
+}
+enum RegisterStatus {
+  REGISTER_STATUS_UNSPECIFIED = 0;
+  REGISTER_STATUS_SUCCESS = 1;
+  REGISTER_STATUS_USERNAME_EXISTS = 2;
+  REGISTER_STATUS_EMAIL_EXISTS = 3;
+  REGISTER_STATUS_INVALID_PASSWORD = 4;
+  REGISTER_STATUS_INVALID_EMAIL = 5;
+}
+
+message RegisterResponse {
+  RegisterStatus status = 1;
+  optional string message = 2;
+}
+
+message ValidateRequest {
+  string session_id = 1;
+  string user_id = 2;
+}
+message ValidateResponse {
+  bool success = 1;
+}
+
+message LogoutRequest {
+  string session_id = 1;
+}
+
+message LogoutResponse {
+  bool success = 1;
+}
+
+service AuthService {
+  rpc Login(LoginRequest) returns (LoginResponse);
+  rpc Logout(LogoutRequest) returns (LogoutResponse);
+  rpc Validate(ValidateRequest) returns (ValidateResponse);
+  rpc Register(RegisterRequest) returns (RegisterResponse);
+}
