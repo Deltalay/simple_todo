@@ -26,10 +26,9 @@ type RegisterStatus int32
 const (
 	RegisterStatus_REGISTER_STATUS_UNSPECIFIED      RegisterStatus = 0
 	RegisterStatus_REGISTER_STATUS_SUCCESS          RegisterStatus = 1
-	RegisterStatus_REGISTER_STATUS_USERNAME_EXISTS  RegisterStatus = 2
-	RegisterStatus_REGISTER_STATUS_EMAIL_EXISTS     RegisterStatus = 3
-	RegisterStatus_REGISTER_STATUS_INVALID_PASSWORD RegisterStatus = 4
-	RegisterStatus_REGISTER_STATUS_INVALID_EMAIL    RegisterStatus = 5
+	RegisterStatus_REGISTER_STATUS_EMAIL_EXISTS     RegisterStatus = 2
+	RegisterStatus_REGISTER_STATUS_INVALID_PASSWORD RegisterStatus = 3
+	RegisterStatus_REGISTER_STATUS_INVALID_EMAIL    RegisterStatus = 4
 )
 
 // Enum value maps for RegisterStatus.
@@ -37,18 +36,16 @@ var (
 	RegisterStatus_name = map[int32]string{
 		0: "REGISTER_STATUS_UNSPECIFIED",
 		1: "REGISTER_STATUS_SUCCESS",
-		2: "REGISTER_STATUS_USERNAME_EXISTS",
-		3: "REGISTER_STATUS_EMAIL_EXISTS",
-		4: "REGISTER_STATUS_INVALID_PASSWORD",
-		5: "REGISTER_STATUS_INVALID_EMAIL",
+		2: "REGISTER_STATUS_EMAIL_EXISTS",
+		3: "REGISTER_STATUS_INVALID_PASSWORD",
+		4: "REGISTER_STATUS_INVALID_EMAIL",
 	}
 	RegisterStatus_value = map[string]int32{
 		"REGISTER_STATUS_UNSPECIFIED":      0,
 		"REGISTER_STATUS_SUCCESS":          1,
-		"REGISTER_STATUS_USERNAME_EXISTS":  2,
-		"REGISTER_STATUS_EMAIL_EXISTS":     3,
-		"REGISTER_STATUS_INVALID_PASSWORD": 4,
-		"REGISTER_STATUS_INVALID_EMAIL":    5,
+		"REGISTER_STATUS_EMAIL_EXISTS":     2,
+		"REGISTER_STATUS_INVALID_PASSWORD": 3,
+		"REGISTER_STATUS_INVALID_EMAIL":    4,
 	}
 )
 
@@ -528,14 +525,13 @@ const file_proto_auth_proto_rawDesc = "" +
 	"\n" +
 	"session_id\x18\x01 \x01(\tR\tsessionId\"*\n" +
 	"\x0eLogoutResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess*\xde\x01\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess*\xb9\x01\n" +
 	"\x0eRegisterStatus\x12\x1f\n" +
 	"\x1bREGISTER_STATUS_UNSPECIFIED\x10\x00\x12\x1b\n" +
-	"\x17REGISTER_STATUS_SUCCESS\x10\x01\x12#\n" +
-	"\x1fREGISTER_STATUS_USERNAME_EXISTS\x10\x02\x12 \n" +
-	"\x1cREGISTER_STATUS_EMAIL_EXISTS\x10\x03\x12$\n" +
-	" REGISTER_STATUS_INVALID_PASSWORD\x10\x04\x12!\n" +
-	"\x1dREGISTER_STATUS_INVALID_EMAIL\x10\x052\x82\x02\n" +
+	"\x17REGISTER_STATUS_SUCCESS\x10\x01\x12 \n" +
+	"\x1cREGISTER_STATUS_EMAIL_EXISTS\x10\x02\x12$\n" +
+	" REGISTER_STATUS_INVALID_PASSWORD\x10\x03\x12!\n" +
+	"\x1dREGISTER_STATUS_INVALID_EMAIL\x10\x042\x82\x02\n" +
 	"\vAuthService\x126\n" +
 	"\x05Login\x12\x15.auth.v1.LoginRequest\x1a\x16.auth.v1.LoginResponse\x129\n" +
 	"\x06Logout\x12\x16.auth.v1.LogoutRequest\x1a\x17.auth.v1.LogoutResponse\x12?\n" +
