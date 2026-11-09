@@ -29,13 +29,32 @@ struct CreateTodoRequest {
 async fn create_todo(body: web::Json<CreateTodoRequest>) -> Result<HttpResponse, Error> {
     let request = body.into_inner();
 
-    let grpc_request = CreateTodoRequest {
+    let grpc_request = todo::CreateTodoRequest {
         title: request.title,
-        description: request.description,
+        description: request.description.unwrap(),
         is_done: request.is_done,
+        id: None,
+    };
+    let mut client = CreateTodoServiceClient::connect("http://127.0.0.1:50051")
+        .await
+        .map_err(actix_web::error::ErrorInternalServerError)?;
+    let request = tonic::Request::new(grpc_request);
+    let response = client
+        .create_todo(request)
+        .await
+        .map_err(actix_web::error::ErrorInternalServerError)
+        .unwrap()
+        .into_inner();
+    let todo = response.todo.unwrap();
+
+    let serial_res = CreateTodoResponse {
+        id: todo.id,
+        title: todo.title,
+        description: todo.description,
+        is_done: todo.is_done,
     };
     // Temp
-    Ok(HttpResponse::Ok().json(obj))
+    Ok(HttpResponse::Ok().json(serial_res))
 }
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -45,7 +64,7 @@ async fn main() -> std::io::Result<()> {
             .send_wildcard()
             .allow_any_method()
             .allow_any_header();
-        App::new().service(hello).wrap(cors)
+        App::new().service(hello).service(create_todo).wrap(cors)
     })
     .workers(4)
     .bind(("127.0.0.1", 8000))?
