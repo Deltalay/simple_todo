@@ -12,3 +12,14 @@ pub struct CreateTodoRequest {
     pub description: Option<String>,
     pub is_done: bool,
 }
+#[derive(Debug, Serialize, Deserialize)]
+pub struct RegisterRequest {
+    pub username: String,
+    pub email: String,
+    pub password: String,
+}
+#[derive(Debug, Serialize, Deserialize)]
+pub struct RegisterResponse {
+    pub status: i32,
+    pub message: Option<String>,
+}

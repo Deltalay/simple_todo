@@ -1,6 +1,7 @@
 use actix_cors::Cors;
 use actix_web::{App, Error, HttpResponse, HttpServer, Responder, get, post, web};
 
+use auth::auth_service_client::AuthServiceClient;
 use todo::create_todo_service_client::CreateTodoServiceClient;
 mod auth {
     tonic::include_proto!("auth.v1");
@@ -45,7 +46,29 @@ async fn create_todo(body: web::Json<models::CreateTodoRequest>) -> Result<HttpR
     };
     Ok(HttpResponse::Ok().json(serial_res))
 }
-
+#[post("/auth/register")]
+async fn register_auth(body: web::Json<models::RegisterRequest>) -> Result<HttpResponse, Error> {
+    let request = body.into_inner();
+    let grpc_request = auth::RegisterRequest {
+        email: request.email,
+        password: request.password,
+        username: request.username,
+    };
+    let mut client = AuthServiceClient::connect("http://127.0.0.1:50052")
+        .await
+        .map_err(actix_web::error::ErrorInternalServerError)?;
+    let request = tonic::Request::new(grpc_request);
+    let response_result = client
+        .register(request)
+        .await
+        .map_err(actix_web::error::ErrorInternalServerError)?;
+    let response = response_result.into_inner();
+    let res = models::RegisterResponse {
+        status: response.status,
+        message: response.message,
+    };
+    Ok(HttpResponse::Ok().json(res))
+}
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
