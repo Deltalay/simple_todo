@@ -77,7 +77,11 @@ async fn main() -> std::io::Result<()> {
             .send_wildcard()
             .allow_any_method()
             .allow_any_header();
-        App::new().service(hello).service(create_todo).wrap(cors)
+        App::new()
+            .service(hello)
+            .service(create_todo)
+            .service(register_auth)
+            .wrap(cors)
     })
     .workers(4)
     .bind(("127.0.0.1", 8000))?
