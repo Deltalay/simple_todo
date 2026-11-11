@@ -3,9 +3,12 @@ package main
 import (
 	authpb "auth_service/proto"
 	"context"
+	"crypto/hmac"
 	"crypto/rand"
+	"crypto/sha512"
 	"crypto/subtle"
 	"encoding/base64"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"log"
@@ -14,6 +17,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
@@ -24,6 +28,7 @@ import (
 type AuthServer struct {
 	authpb.UnimplementedAuthServiceServer
 	db *pgxpool.Pool
+	sessionSecret string
 }
 
 func HashPassword(password string) (string, error) {
@@ -90,16 +95,81 @@ func IsValidEmail(email string) bool {
 
 	return true
 }
-func NewAuthServer(db *pgxpool.Pool) *AuthServer {
+func SessionGenerator(email string, user_id string, secret string) string {
+    payload := "email="+email+"&user_id="+user_id
+    mac := hmac.New(sha512.New,[]byte(secret));
+    mac.Write([]byte(payload))
+    return hex.EncodeToString(mac.Sum(nil))
+}
+func VerifyHmacSHA512(email, user_id, secretKey string, mac string) bool {
+	providedMAC, err := hex.DecodeString(mac)
+	if err != nil {
+		return false
+	}
+	payload := "email="+email+"&user_id="+user_id
+
+	h := hmac.New(sha512.New, []byte(secretKey))
+	h.Write([]byte(payload))
+	expectedMAC := h.Sum(nil)
+
+	return hmac.Equal(expectedMAC, providedMAC)
+}
+func VerifySession(session_id string, secret string) bool {
+    return false
+}
+func NewAuthServer(db *pgxpool.Pool, sessionSecret string) *AuthServer {
 	return &AuthServer{
 		db: db,
+		sessionSecret: sessionSecret,
 	}
 }
+
 func (s *AuthServer) Login(ctx context.Context, req *authpb.LoginRequest) (*authpb.LoginResponse, error) {
 	email := req.GetEmail()
 	password := req.GetPassword()
+	if !IsValidEmail(email) {
+	// Temporary will change in future.
+	// I did not think about this part.
+    	return &authpb.LoginResponse {
+             Email: "None",
+             Username: "None",
+             SessionId: "None",
+             UserId: "None",
+    	}, nil
+	}
+	var email_val string
+	var password_hash string
+	var id string
+	var username string
+	error := s.db.QueryRow(ctx, "SELECT email, name, password, id FROM users WHERE email=$1", email).Scan(&email_val, &username, &password_hash, &id)
+	if error ==  pgx.ErrNoRows {
+	    return &authpb.LoginResponse{
+            Email: "None",
+            Username: "None",
+            SessionId: "None",
+            UserId: "None",
+		}, nil
+	}
+	is_correct, err := VerifyPassword(password, password_hash)
+	// when err exist, return all none
+	// when is not correct, also return all none
+	// so I guess we can use or in this case.
+	if err != nil || !is_correct {
+    	return &authpb.LoginResponse{
+                Email: "None",
+                Username: "None",
+                SessionId: "None",
+                UserId: "None",
+        }, nil
+	}
+	session := SessionGenerator(email, id, s.sessionSecret)
 
-	return nil, errors.New("invalid credentials")
+	return &authpb.LoginResponse{
+	    Email: email,
+		Username: username,
+		SessionId: session,
+		UserId: id,
+	}, nil
 }
 func (s *AuthServer) Register(ctx context.Context, req *authpb.RegisterRequest) (*authpb.RegisterResponse, error) {
 	email := req.GetEmail()
@@ -179,6 +249,8 @@ func main() {
 		log.Fatalf("Failed to listen: %v", err)
 	}
 	connectionString := os.Getenv("DATABASE_URL")
+	// Recommended 512 hex char from TRNG
+	sessionSecret := os.Getenv("SECRET_KEY")
 	db, err := pgxpool.New(ctx, connectionString)
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
@@ -188,7 +260,7 @@ func main() {
 		log.Fatal(err)
 	}
 	grpcServer := grpc.NewServer()
-	authServer := NewAuthServer(db)
+	authServer := NewAuthServer(db, sessionSecret)
 	authpb.RegisterAuthServiceServer(grpcServer, authServer)
 	log.Println("Auth server running on port 50051")
 
